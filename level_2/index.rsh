@@ -19,7 +19,7 @@ export const main = Reach.App(() => {
     })),
     getNum: Fun([UInt], UInt),
     seeHash: Fun([Digest], Null),
-    returnNum: Fun([Array(UInt, 10), UInt], Tuple(UInt, Array(UInt, 10))),
+    loadAPIs: Fun([], Null),
   });
   const B = API('Player', {
     // Specify Bob's interact interface here
@@ -38,6 +38,7 @@ export const main = Reach.App(() => {
   const partDraws = new Map(Address, UInt);
   const startingArray = Array.iota(10);
   A.interact.seeHash(commitA);
+  A.interact.loadAPIs();
   commit();
   A.pay([[amt, nftId]]);
   const end = lastConsensusTime() + 10;

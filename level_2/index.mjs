@@ -44,7 +44,7 @@ populateArray(ticketsBucket);
 const pickedNums = [];
 const pickNum = (array) => {
   let num = 0;
-  while (!pickedNums.includes(num)) {
+  while (pickedNums.includes(num)) {
     num = ticketsBucket[Math.floor(Math.random() * numTickets)];
   }
   pickedNums.push(num);
@@ -97,9 +97,9 @@ await Promise.all([
     ...common,
     startRaffle: () => {
       console.log('The Raffle information is being returned to the frontend');
-      startAPIs();
       return nftParams;
     },
+    loadAPIs: () => { startAPIs(); },
     seeHash: value => {
       console.log(`Winning number hash is -> ${value}`);
     }
