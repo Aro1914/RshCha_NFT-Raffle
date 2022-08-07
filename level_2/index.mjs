@@ -19,7 +19,7 @@ const nftParams = {
   numTickets,
 };
 
-await accBob.tokenAccept(nftParams.nftId);
+// await accBob.tokenAccept(nftParams.nftId);
 // const check = ['won', 'lost'];
 
 const common = {
@@ -51,6 +51,9 @@ const pickNum = (array) => {
   return num;
 };
 
+let done = false;
+const APIs = [];
+
 const startAPIs = async () => {
 
   const runAPIs = async (who) => {
@@ -60,6 +63,7 @@ const startAPIs = async () => {
     const acc = await stdlib.newTestAccount(startingBalance);
     acc.setDebugLabel(who);
     await acc.tokenAccept(nftParams.nftId);
+    APIs.push([who, acc]);
     const ctc = acc.contract(backend, ctcAlice.getInfo());
     try {
       await ctc.apis.B.showNum((() => {
@@ -75,6 +79,15 @@ const startAPIs = async () => {
       console.log(`The raffle is over`);
     }
   };
+
+  await runAPIs('Alice');
+  await runAPIs('Bob');
+  await runAPIs('Emmanuel');
+  await runAPIs('Aro1914');
+
+  while (!done) {
+    await stdlib.wait(1);
+  }
 };
 
 console.log('Starting backends...');
@@ -84,6 +97,7 @@ await Promise.all([
     ...common,
     startRaffle: () => {
       console.log('The Raffle information is being returned to the frontend');
+      startAPIs();
       return nftParams;
     },
     seeHash: value => {
@@ -92,5 +106,12 @@ await Promise.all([
     // implement Alice's interact object here
   }),
 ]);
+
+for (const [who, acc] of APIs) {
+  const [amt, amtNFT] = await stdlib.balanceOf(acc, [null, nftParams.nftId]);
+  console.log(`${who} has ${stdlib.formatCurrency(amt)} ${stdlib.standardUnit} and ${amtNFT}`);
+}
+
+done = true;
 
 console.log('Goodbye, Alice and Bob!');

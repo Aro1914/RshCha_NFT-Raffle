@@ -43,26 +43,22 @@ export const main = Reach.App(() => {
   const end = lastConsensusTime() + 10;
 
   const [
-    keepGoing,
     player
-  ] = parallelReduce([true, A])
+  ] = parallelReduce([A])
     .invariant(balance() == 0)
     .invariant(balance(nftId) == amt)
-    .while(keepGoing)
+    .while(lastConsensusTime() < end)
     .api_(B.showNum, num => {
       return [(notify) => {
         notify(null);
         const who = this;
         partDraws[who] = num;
-        return [shouldContinue, who];
+        return [who];
       }];
     })
     .timeout(absoluteTime(end), () => {
       A.publish();
       return [
-        parallelArray,
-        keepGoing,
-        len,
         player
       ];
     });
