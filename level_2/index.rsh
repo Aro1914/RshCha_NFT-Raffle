@@ -36,7 +36,6 @@ export const main = Reach.App(() => {
   // The first one to publish deploys the contract
   A.publish(nftId, numTickets, commitA);
   const partDraws = new Map(Address, UInt);
-  const startingArray = Array.iota(10);
   A.interact.seeHash(commitA);
   A.interact.loadAPIs();
   commit();
@@ -48,7 +47,7 @@ export const main = Reach.App(() => {
   ] = parallelReduce([A])
     .invariant(balance() == 0)
     .invariant(balance(nftId) == amt)
-    .while(lastConsensusTime() < end)
+    .while(lastConsensusTime() <= end)
     .api_(B.showNum, num => {
       return [(notify) => {
         notify(null);
@@ -97,8 +96,8 @@ export const main = Reach.App(() => {
         currentOwner,
       ];
     });
-  transfer(amt, nftId).to(currentOwner);
   A.interact.seeOutcome(outcome, currentOwner);
+  transfer(amt, nftId).to(currentOwner);
   commit();
   exit();
 });

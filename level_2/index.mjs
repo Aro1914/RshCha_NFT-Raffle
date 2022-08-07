@@ -46,7 +46,7 @@ const pickNum = (array) => {
   do {
     const index = Math.floor(Math.random() * numTickets);
     num = array[index];
-    console.log(array, index, num);
+    // console.log(array, index, num);
   }
   while (pickedNums[num]);
   pickedNums[num] = 1;
@@ -68,23 +68,35 @@ const startAPIs = async () => {
     APIs.push([who, acc]);
     const ctc = acc.contract(backend, ctcAlice.getInfo());
     try {
-      await ctc.apis.B.showNum((() => {
-        console.log(`${who} pulled out ${num}`);
-        return num;
-      })());
-
-      await ctc.apis.B.reveal((() => {
-        console.log(`${who}'s draw is been revealed`);
-        return;
-      })());
+      // await ctc.apis.B.showNum((() => {
+      //   console.log(`${who} pulled out ${num}`);
+      //   return num;
+      // })());
+      await ctc.apis.B.showNum(num);
+      console.log(`${who} pulled out ${num}`);
     } catch (e) {
-      console.log(`The raffle is over`);
+      console.log(`Sorry ${who} no more draws available`);
+    }
+    try {
+      // await ctc.apis.B.reveal((() => {
+      //   console.log(`${who}'s draw is been revealed`);
+      //   return;
+      // })());
+      await ctc.apis.B.reveal();
+    } catch (e) {
+      console.log(`Sorry ${who} the raffle is over`);
     }
   };
 
   await runAPIs('Alice');
   await runAPIs('Bob');
   await runAPIs('Emmanuel');
+  await runAPIs('Aro1914');
+  await runAPIs('Alice');
+  await runAPIs('Bob');
+  await runAPIs('Emmanuel');
+  await runAPIs('Aro1914');
+  await runAPIs('Aro1914');
   await runAPIs('Aro1914');
 
   while (!done) {
