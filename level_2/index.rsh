@@ -24,7 +24,7 @@ export const main = Reach.App(() => {
   const B = API('Player', {
     // Specify Bob's interact interface here
     showNum: Fun([UInt], Null),
-    reveal: Fun([UInt], Null),
+    reveal: Fun([], Null),
   });
   init();
   A.only(() => {
@@ -43,28 +43,18 @@ export const main = Reach.App(() => {
   const end = lastConsensusTime() + 10;
 
   const [
-    parallelArray,
     keepGoing,
-    len,
     player
-  ] = parallelReduce([startingArray, true, numTickets, A])
+  ] = parallelReduce([true, A])
     .invariant(balance() == 0)
     .invariant(balance(nftId) == amt)
     .while(keepGoing)
     .api_(B.showNum, num => {
       return [(notify) => {
         notify(null);
-        A.only(() => {
-          const [thisNum, newArray] = declassify(interact.returnNum(parallelArray, len));
-        });
-        commit();
-        A.publish(thisNum, newArray);
         const who = this;
-        partDraws[who] = thisNum;
-        const newLen = len - 1;
-        const shouldContinue = newLen > 0;
-        const updatedArray = array(UInt, [...newArray]);
-        return [updatedArray, shouldContinue, newLen, who];
+        partDraws[who] = num;
+        return [shouldContinue, who];
       }];
     })
     .timeout(absoluteTime(end), () => {
@@ -93,7 +83,7 @@ export const main = Reach.App(() => {
     .invariant(balance() == 0)
     .invariant(balance(nftId) == amt)
     .while(keepOn)
-    .api_(B.reveal, num => {
+    .api_(B.reveal, () => {
       return [(notify) => {
         notify(null);
         const isWinner = winner(winningNum, partDraws[this]);

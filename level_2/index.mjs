@@ -62,9 +62,15 @@ const startAPIs = async () => {
     await acc.tokenAccept(nftParams.nftId);
     const ctc = acc.contract(backend, ctcAlice.getInfo());
     try {
-      await ctc.apis.B.showNum(num);
-      console.log(`${who} pulled out ${num}`);
-      await ctc.apis.B.reveal();
+      await ctc.apis.B.showNum((() => {
+        console.log(`${who} pulled out ${num}`);
+        return num;
+      })());
+
+      await ctc.apis.B.reveal((() => {
+        console.log(`${who}'s draw is been revealed`);
+        return;
+      })());
     } catch (e) {
       console.log(`The raffle is over`);
     }
