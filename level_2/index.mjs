@@ -31,23 +31,25 @@ const common = {
   }
 };
 
-const ticketsBucket = Array(numTickets);
-const populateArray = array => {
+const ticketsBucket = (() => {
+  const array = [];
   const length = numTickets;
-  let i = 1;
-  for (i; i <= length; i++); {
-    array[(i - 1)] = i;
+  let i = 0;
+  for (i; i < length; i++) {
+    array[i] = i + 1;
   }
   return array;
-};
-populateArray(ticketsBucket);
-const pickedNums = [];
+})();
+const pickedNums = {};
 const pickNum = (array) => {
   let num = 0;
-  while (pickedNums.includes(num)) {
-    num = ticketsBucket[Math.floor(Math.random() * numTickets)];
+  do {
+    const index = Math.floor(Math.random() * numTickets);
+    num = array[index];
+    console.log(array, index, num);
   }
-  pickedNums.push(num);
+  while (pickedNums[num]);
+  pickedNums[num] = 1;
   return num;
 };
 

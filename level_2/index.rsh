@@ -53,7 +53,7 @@ export const main = Reach.App(() => {
       return [(notify) => {
         notify(null);
         const who = this;
-        partDraws[who] = num;
+        partDraws[who] = (num + 1);
         return [who];
       }];
     })
