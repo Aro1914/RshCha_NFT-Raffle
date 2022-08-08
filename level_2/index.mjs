@@ -67,37 +67,41 @@ const startAPIs = async () => {
     await acc.tokenAccept(nftParams.nftId);
     APIs.push([who, acc]);
     const ctc = acc.contract(backend, ctcAlice.getInfo());
-    try {
-      // await ctc.apis.B.showNum((() => {
-      //   console.log(`${who} pulled out ${num}`);
-      //   return num;
-      // })());
-      await ctc.apis.B.showNum(num);
-      console.log(`${who} pulled out ${num}`);
-    } catch (e) {
-      console.log(`Sorry ${who} no more draws available`);
-    }
-    try {
-      // await ctc.apis.B.reveal((() => {
-      //   console.log(`${who}'s draw is been revealed`);
-      //   return;
-      // })());
-      await ctc.apis.B.reveal();
-    } catch (e) {
-      console.log(`Sorry ${who} the raffle is over`);
-    }
-  };
 
-  await runAPIs('Alice');
-  await runAPIs('Bob');
-  await runAPIs('Emmanuel');
-  await runAPIs('Aro1914');
-  await runAPIs('Alice');
-  await runAPIs('Bob');
-  await runAPIs('Emmanuel');
-  await runAPIs('Aro1914');
-  await runAPIs('Aro1914');
-  await runAPIs('Aro1914');
+    await ctc.apis.Player.showNum((() => {
+      console.log(`${who} pulled out ${num}`);
+      return num;
+    })());
+
+    return async () => {
+      ctc.apis.Player.reveal((() => {
+        console.log(`${who}'s draw is been revealed`);
+        return;
+      })());
+    };
+
+  };
+  const alice = await runAPIs('Alice');
+  const bob = await runAPIs('Bob');
+  const emmanuel = await runAPIs('Emmanuel');
+  const aro1914 = await runAPIs('Aro1914');
+  const claire = await runAPIs('Claire');
+  const ken = await runAPIs('Ken');
+  const jenny = await runAPIs('Jenny');
+  const kingsley = await runAPIs('Kingsley');
+  const nick = await runAPIs('Nick');
+  const jp = await runAPIs('JP');
+
+  await alice();
+  await bob();
+  await emmanuel();
+  await aro1914();
+  await claire();
+  await ken();
+  await jenny();
+  await kingsley();
+  await nick();
+  await jp();
 
   while (!done) {
     await stdlib.wait(1);

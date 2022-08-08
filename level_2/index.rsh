@@ -40,26 +40,32 @@ export const main = Reach.App(() => {
   A.interact.loadAPIs();
   commit();
   A.pay([[amt, nftId]]);
-  const end = lastConsensusTime() + 10;
+  const end = 20;
 
   const [
-    player
-  ] = parallelReduce([A])
+    player,
+    counter,
+    shouldStep
+  ] = parallelReduce([A, 0, true])
     .invariant(balance() == 0)
     .invariant(balance(nftId) == amt)
-    .while(lastConsensusTime() <= end)
+    .while(shouldStep)
     .api_(B.showNum, num => {
       return [(notify) => {
         notify(null);
         const who = this;
         partDraws[who] = (num + 1);
-        return [who];
+        const count = counter + 1;
+        const shouldMove = count != 10;
+        return [who, count, shouldMove];
       }];
     })
-    .timeout(absoluteTime(end), () => {
+    .timeout(relativeTime(end), () => {
       A.publish();
       return [
-        player
+        player,
+        counter,
+        shouldStep
       ];
     });
   commit();
@@ -70,6 +76,8 @@ export const main = Reach.App(() => {
   });
   A.publish(saltA, winningNum);
   checkCommitment(commitA, saltA, winningNum);
+  commit();
+  A.publish();
 
   const [
     outcome,
@@ -88,7 +96,7 @@ export const main = Reach.App(() => {
         return [isWinner, shouldContinue, who];
       }];
     })
-    .timeout(absoluteTime(end), () => {
+    .timeout(relativeTime(end), () => {
       A.publish();
       return [
         outcome,
