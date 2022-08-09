@@ -19,18 +19,6 @@ const nftParams = {
   numTickets,
 };
 
-// await accBob.tokenAccept(nftParams.nftId);
-// const check = ['won', 'lost'];
-
-const common = {
-  getNum: num => {
-    return (Math.floor(Math.random() * num) + 1);
-  },
-  seeOutcome: (truthy, address) => {
-    truthy ? console.log(`All Bobs lost`) : console.log(`Bob with the address of ${address[1]} won`);
-  }
-};
-
 const ticketsBucket = (() => {
   const array = [];
   const length = numTickets;
@@ -46,7 +34,6 @@ const pickNum = (array) => {
   do {
     const index = Math.floor(Math.random() * numTickets);
     num = array[index];
-    // console.log(array, index, num);
   }
   while (pickedNums[num]);
   pickedNums[num] = 1;
@@ -74,34 +61,35 @@ const startAPIs = async () => {
     })());
 
     return async () => {
-      ctc.apis.Player.reveal((() => {
-        console.log(`${who}'s draw is been revealed`);
-        return;
-      })());
+      try {
+        const num = await ctc.apis.Player.reveal();
+        console.log(`${who} awaits reveal`);
+      } catch (e) {
+        console.log(`Sorry ${who}, it seems an error occurred with your reveal`);
+      }
     };
-
   };
   const alice = await runAPIs('Alice');
   const bob = await runAPIs('Bob');
-  const emmanuel = await runAPIs('Emmanuel');
-  const aro1914 = await runAPIs('Aro1914');
+  const emmanuel = await runAPIs('Samuel');
+  const aro1914 = await runAPIs('Clark');
   const claire = await runAPIs('Claire');
   const ken = await runAPIs('Ken');
   const jenny = await runAPIs('Jenny');
   const kingsley = await runAPIs('Kingsley');
-  const nick = await runAPIs('Nick');
-  const jp = await runAPIs('JP');
+  const nick = await runAPIs('Richard');
+  const jp = await runAPIs('George');
 
-  await alice();
-  await bob();
-  await emmanuel();
-  await aro1914();
-  await claire();
-  await ken();
-  await jenny();
-  await kingsley();
-  await nick();
-  await jp();
+  alice();
+  bob();
+  emmanuel();
+  aro1914();
+  claire();
+  ken();
+  jenny();
+  kingsley();
+  nick();
+  jp();
 
   while (!done) {
     await stdlib.wait(1);
@@ -112,7 +100,13 @@ console.log('Starting backends...');
 await Promise.all([
   backend.Alice(ctcAlice, {
     ...stdlib.hasRandom,
-    ...common,
+    getNum: num => {
+      return (Math.floor(Math.random() * num) + 1);
+    },
+    seeOutcome: (truthy, address, num) => {
+      console.log(`The winning number was ${num}`);
+      console.log(!truthy ? `All Bobs lost` : `Someone with the address of ${address} won`);
+    },
     startRaffle: () => {
       console.log('The Raffle information is being returned to the frontend');
       return nftParams;
@@ -125,9 +119,11 @@ await Promise.all([
   }),
 ]);
 
+const [amt, amtNFT] = await stdlib.balancesOf(accAlice, [null, theNFT.id]);
+console.log(`The real Alice has ${stdlib.formatCurrency(amt)} ${stdlib.standardUnit} and ${amtNFT} of the NFT`);
 for (const [who, acc] of APIs) {
-  const [amt, amtNFT] = await stdlib.balanceOf(acc, [null, nftParams.nftId]);
-  console.log(`${who} has ${stdlib.formatCurrency(amt)} ${stdlib.standardUnit} and ${amtNFT}`);
+  const [amt, amtNFT] = await stdlib.balancesOf(acc, [null, theNFT.id]);
+  console.log(`${who} has ${stdlib.formatCurrency(amt)} ${stdlib.standardUnit} and ${amtNFT} of the NFT`);
 }
 
 done = true;

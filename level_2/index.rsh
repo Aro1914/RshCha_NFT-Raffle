@@ -1,18 +1,20 @@
 'reach 0.1';
 
 const amt = 1;
-const [isOutcome, B_WINS, B_LOSES] = makeEnum(2);
+const [isOutcome, B_LOSES, B_WINS] = makeEnum(2);
 
 const winner = (winningNum, Bs_Num) => {
-  return (winningNum == Bs_Num ? 0 : 1);
+  return (winningNum == Bs_Num ? 1 : 0);
 };
+
+const getDataFromMaybe = m => fromMaybe(m, (() => 0), ((x) => x));
 
 export const main = Reach.App(() => {
   setOptions({ untrustworthyMaps: true });
   const A = Participant('Alice', {
     // Specify Alice's interact interface here
     ...hasRandom,
-    seeOutcome: Fun([UInt, Address], Null),
+    seeOutcome: Fun([UInt, Address, UInt], Null),
     startRaffle: Fun([], Object({
       nftId: Token,
       numTickets: UInt,
@@ -24,7 +26,7 @@ export const main = Reach.App(() => {
   const B = API('Player', {
     // Specify Bob's interact interface here
     showNum: Fun([UInt], Null),
-    reveal: Fun([], Null),
+    reveal: Fun([], UInt),
   });
   init();
   A.only(() => {
@@ -35,41 +37,14 @@ export const main = Reach.App(() => {
   });
   // The first one to publish deploys the contract
   A.publish(nftId, numTickets, commitA);
-  const partDraws = new Map(Address, UInt);
+  const partDraws = new Map(UInt);
   A.interact.seeHash(commitA);
   A.interact.loadAPIs();
   commit();
   A.pay([[amt, nftId]]);
-  const end = 20;
+  const end = lastConsensusTime() + 60;
 
-  const [
-    player,
-    counter,
-    shouldStep
-  ] = parallelReduce([A, 0, true])
-    .invariant(balance() == 0)
-    .invariant(balance(nftId) == amt)
-    .while(shouldStep)
-    .api_(B.showNum, num => {
-      return [(notify) => {
-        notify(null);
-        const who = this;
-        partDraws[who] = (num + 1);
-        const count = counter + 1;
-        const shouldMove = count != 10;
-        return [who, count, shouldMove];
-      }];
-    })
-    .timeout(relativeTime(end), () => {
-      A.publish();
-      return [
-        player,
-        counter,
-        shouldStep
-      ];
-    });
   commit();
-
   A.only(() => {
     const saltA = declassify(_saltA);
     const winningNum = declassify(_winningNum);
@@ -81,30 +56,33 @@ export const main = Reach.App(() => {
 
   const [
     outcome,
-    keepOn,
     currentOwner
-  ] = parallelReduce([B_LOSES, true, A])
+  ] = parallelReduce([B_LOSES, A])
     .invariant(balance() == 0)
     .invariant(balance(nftId) == amt)
-    .while(keepOn)
-    .api_(B.reveal, () => {
-      return [(notify) => {
-        notify(null);
-        const isWinner = winner(winningNum, partDraws[this]);
-        const who = isWinner ? A : this;
-        const shouldContinue = isWinner ? true : false;
-        return [isWinner, shouldContinue, who];
-      }];
+    .while(lastConsensusTime() <= end)
+    .api(B.showNum, (num, notify) => {
+      notify(null);
+      partDraws[this] = num;
+      return [outcome, currentOwner];
     })
-    .timeout(relativeTime(end), () => {
+    .api(B.reveal, (notify) => {
+      notify(getDataFromMaybe(partDraws[this]));
+      check(typeOf(partDraws[A]) == typeOf(partDraws[this]));
+      const result = winner(winningNum, getDataFromMaybe(partDraws[this]));
+      const isWinner = this != A ? result : outcome;
+      const newOutcome = isWinner ? B_WINS : outcome;
+      const who = isWinner ? this : currentOwner;
+      return [newOutcome, who];
+    })
+    .timeout(absoluteTime(end), () => {
       A.publish();
       return [
         outcome,
-        keepOn,
-        currentOwner,
+        currentOwner
       ];
     });
-  A.interact.seeOutcome(outcome, currentOwner);
+  A.interact.seeOutcome(outcome, currentOwner, winningNum);
   transfer(amt, nftId).to(currentOwner);
   commit();
   exit();
